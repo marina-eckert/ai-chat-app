@@ -1,0 +1,41 @@
+{
+  "name": "ai-chat-app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "husky",
+    "lint": "eslint *.js",
+    "format": "prettier --write ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/marina-eckert/ai-chat-app.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/marina-eckert/ai-chat-app/issues"
+  },
+  "homepage": "https://github.com/marina-eckert/ai-chat-app#readme",
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.0.2",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.3.0",
+    "prettier": "^3.8.1"
+  },
+  "lint-staged": {
+    "*.{js,html,css,json}": [
+      "prettier --write",
+      "prettier --check"
+    ],
+    "*.js": [
+      "eslint --fix",
+      "eslint"
+    ]
+  }
+}
