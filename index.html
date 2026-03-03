@@ -4,22 +4,88 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AI Chat</title>
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="src/output.css" />
+    <script src="chat.js" defer></script>
   </head>
-  <body>
-    <div class="chat-container">
-      <h1 class="chat-title">AI Chat</h1>
-      <div class="message-list" id="messageList"></div>
-      <div class="input-area">
-        <input
-          type="text"
-          id="messageInput"
-          placeholder="Type a message..."
-          autocomplete="off"
-        />
-        <button id="sendBtn">Send</button>
+  <body class="h-screen flex bg-gray-100 text-gray-800 overflow-hidden">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-gray-900 text-white flex flex-col p-4 gap-4 shrink-0">
+      <button
+        class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition"
+      >
+        + New Chat
+      </button>
+
+      <nav class="flex flex-col gap-1">
+        <a
+          href="#"
+          class="bg-gray-700 text-white text-sm px-3 py-2 rounded-lg font-medium"
+        >
+          Chat about Tailwind
+        </a>
+
+        <a
+          href="#"
+          class="text-gray-400 hover:bg-gray-800 hover:text-white text-sm px-3 py-2 rounded-lg transition"
+        >
+          General questions
+        </a>
+
+        <a
+          href="#"
+          class="text-gray-400 hover:bg-gray-800 hover:text-white text-sm px-3 py-2 rounded-lg transition"
+        >
+          Project ideas
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main chat area -->
+    <main class="flex flex-col flex-1 overflow-hidden">
+      <!-- Header -->
+      <header class="bg-white border-b border-gray-200 px-6 py-4 shrink-0">
+        <h1 class="text-base font-semibold">Chat about Tailwind</h1>
+      </header>
+
+      <!-- Message list -->
+      <div
+        class="flex-1 overflow-y-auto px-6 py-4 flex flex-col gap-4"
+        id="messageList"
+      >
+        <chat-message type="ai">
+          Hey! What would you like to know about Tailwind CSS?
+        </chat-message>
+
+        <chat-message type="user">
+          How do I make a two-column layout?
+        </chat-message>
+
+        <chat-message type="ai">
+          Use <code>flex</code> on the parent and give the sidebar a fixed width
+          with <code>w-64</code>. The main area gets <code>flex-1</code> to fill
+          remaining space.
+        </chat-message>
+
+        <chat-message type="user"> That makes sense, thanks! </chat-message>
       </div>
-    </div>
-    <script src="chat.js"></script>
+
+      <!-- Input bar -->
+      <div class="bg-white border-t border-gray-200 px-6 py-4 shrink-0">
+        <div class="flex gap-3 items-end">
+          <textarea
+            id="messageInput"
+            rows="1"
+            placeholder="Message..."
+            class="flex-1 resize-none border border-gray-300 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          ></textarea>
+          <button
+            id="sendBtn"
+            class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition"
+          >
+            Send
+          </button>
+        </div>
+      </div>
+    </main>
   </body>
 </html>

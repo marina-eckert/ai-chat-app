@@ -7,7 +7,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "prepare": "husky",
     "lint": "eslint *.js",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "build:css": "tailwindcss -i ./src/input.css -o ./src/output.css",
+    "watch:css": "tailwindcss -i ./src/input.css -o ./src/output.css --watch"
   },
   "repository": {
     "type": "git",
@@ -23,10 +25,12 @@
   "homepage": "https://github.com/marina-eckert/ai-chat-app#readme",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@tailwindcss/cli": "^4.2.1",
     "eslint": "^10.0.2",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^17.3.0",
-    "prettier": "^3.8.1"
+    "prettier": "^3.8.1",
+    "tailwindcss": "^4.2.1"
   },
   "lint-staged": {
     "*.{js,html,css,json}": [
