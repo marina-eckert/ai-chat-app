@@ -1,4 +1,3 @@
-// Custom element for chat messages
 class ChatMessage extends HTMLElement {
   connectedCallback() {
     const type = this.getAttribute('type');
@@ -26,12 +25,9 @@ class ChatMessage extends HTMLElement {
 
 customElements.define('chat-message', ChatMessage);
 
-// Send button functionality
 const messageList = document.getElementById('messageList');
-const messageInput = document.getElementById('messageInput');
-const sendBtn = document.getElementById('sendBtn');
 
-function addMessage(text) {
+export function appendUserMessage(text) {
   const msg = document.createElement('chat-message');
   msg.setAttribute('type', 'user');
   msg.textContent = text;
@@ -39,16 +35,19 @@ function addMessage(text) {
   messageList.scrollTop = messageList.scrollHeight;
 }
 
-sendBtn.addEventListener('click', () => {
-  const text = messageInput.value.trim();
-  if (!text) return;
-  addMessage(text);
-  messageInput.value = '';
-});
+export function createAssistantBubble() {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'flex justify-start';
 
-messageInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendBtn.click();
-  }
-});
+  const bubble = document.createElement('div');
+  bubble.className =
+    'max-w-xs lg:max-w-md px-4 py-2 rounded-2xl text-sm leading-relaxed bg-white text-gray-800 shadow-sm rounded-bl-sm';
+
+  wrapper.appendChild(bubble);
+  messageList.appendChild(wrapper);
+  return bubble;
+}
+
+export function scrollToBottom() {
+  messageList.scrollTop = messageList.scrollHeight;
+}
