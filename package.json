@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "prepare": "husky",
-    "lint": "eslint *.js",
+    "lint": "eslint src/**/*.js",
     "format": "prettier --write .",
     "build:css": "tailwindcss -i ./src/input.css -o ./src/output.css",
     "watch:css": "tailwindcss -i ./src/input.css -o ./src/output.css --watch"
@@ -29,17 +29,18 @@
     "eslint": "^10.0.2",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^17.3.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "prettier": "^3.8.1",
     "tailwindcss": "^4.2.1"
   },
   "lint-staged": {
-    "*.{js,html,css,json}": [
-      "prettier --write",
-      "prettier --check"
+    "*.{html,css,json}": [
+      "prettier --write"
     ],
     "*.js": [
       "eslint --fix",
-      "eslint"
+      "prettier --write"
     ]
   }
 }
