@@ -1,46 +1,29 @@
 {
   "name": "ai-chat-app",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "version": "0.1.0",
+  "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "prepare": "husky",
-    "lint": "eslint src/**/*.js",
-    "format": "prettier --write .",
-    "build:css": "tailwindcss -i ./src/input.css -o ./src/output.css",
-    "watch:css": "tailwindcss -i ./src/input.css -o ./src/output.css --watch"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/marina-eckert/ai-chat-app.git"
+  "dependencies": {
+    "next": "16.2.2",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
-  "bugs": {
-    "url": "https://github.com/marina-eckert/ai-chat-app/issues"
-  },
-  "homepage": "https://github.com/marina-eckert/ai-chat-app#readme",
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
-    "@tailwindcss/cli": "^4.2.1",
-    "eslint": "^10.0.2",
-    "eslint-config-prettier": "^10.1.8",
-    "globals": "^17.3.0",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20.19.39",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.2",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
     "prettier": "^3.8.1",
-    "tailwindcss": "^4.2.1"
-  },
-  "lint-staged": {
-    "*.{html,css,json}": [
-      "prettier --write"
-    ],
-    "*.js": [
-      "eslint --fix",
-      "prettier --write"
-    ]
+    "tailwindcss": "^4",
+    "typescript": "^5"
   }
 }
