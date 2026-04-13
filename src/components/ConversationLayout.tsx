@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import Sidebar from './sidebar/Sidebar';
 import ChatPanel from './chat/ChatPanel';
 import { getConversations } from '@/api/conversations';
@@ -10,12 +10,12 @@ export default function ConversationLayout({
 }: {
   conversationId: number;
 }) {
-  const [conversations, setConversations] = useState([]);
   const router = useRouter();
 
-  useEffect(() => {
-    getConversations().then(setConversations);
-  }, []);
+  const { data: conversations = [] } = useQuery({
+    queryKey: ['conversations'],
+    queryFn: getConversations,
+  });
 
   return (
     <div className="h-screen w-screen flex overflow-hidden">

@@ -1,10 +1,11 @@
 'use client';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getMessages, sendMessage } from '@/api/messages';
 import Message from './Message';
 import InputForm from './InputForm';
 
-type Message = {
+type ChatMessage = {
   role: string;
   content: string;
 };
@@ -14,32 +15,37 @@ export default function ChatPanel({
 }: {
   conversationId: number;
 }) {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
+  const [streamingMessages, setStreamingMessages] = useState<ChatMessage[]>([]);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!conversationId) return;
-    getMessages(conversationId).then(setMessages);
-  }, [conversationId]);
+  const { data: persistedMessages = [] } = useQuery({
+    queryKey: ['messages', conversationId],
+    queryFn: () => getMessages(conversationId),
+    enabled: !!conversationId,
+  });
+
+  const messages =
+    streamingMessages.length > 0 ? streamingMessages : persistedMessages;
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   async function handleSend(text: string) {
-    const userMsg = { role: 'user', content: text };
-    setMessages((prev) => [...prev, userMsg]);
+    const userMsg: ChatMessage = { role: 'user', content: text };
+    setStreamingMessages([...persistedMessages, userMsg]);
     setLoading(true);
 
     let aiContent = '';
     await sendMessage(
       conversationId,
       text,
-      [...messages, userMsg],
+      [...persistedMessages, userMsg],
       (chunk: string) => {
         aiContent += chunk;
-        setMessages((prev) => {
+        setStreamingMessages((prev) => {
           const last = prev[prev.length - 1];
           if (last?.role === 'assistant') {
             return [...prev.slice(0, -1), { ...last, content: aiContent }];
@@ -48,13 +54,18 @@ export default function ChatPanel({
         });
       },
     );
+
     setLoading(false);
+    setStreamingMessages([]);
+    await queryClient.invalidateQueries({
+      queryKey: ['messages', conversationId],
+    });
   }
 
   return (
     <main className="flex flex-col flex-1 overflow-hidden">
       <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
-        {messages.map((m, i) => (
+        {messages.map((m: ChatMessage, i: number) => (
           <Message key={i} message={m} />
         ))}
         {loading && (

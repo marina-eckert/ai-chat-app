@@ -1,17 +1,15 @@
-const conversations = [
-  { id: 1, title: 'Chat about Tailwind' },
-  { id: 2, title: 'General questions' },
-];
+import { prisma } from '@/lib/prisma';
 
 export async function GET() {
+  const conversations = await prisma.conversation.findMany({
+    orderBy: { createdAt: 'desc' },
+  });
   return Response.json(conversations);
 }
 
 export async function POST() {
-  const newConvo = {
-    id: Date.now(),
-    title: 'New Chat',
-  };
-  conversations.push(newConvo);
-  return Response.json(newConvo);
+  const conversation = await prisma.conversation.create({
+    data: { title: 'New Chat' },
+  });
+  return Response.json(conversation, { status: 201 });
 }

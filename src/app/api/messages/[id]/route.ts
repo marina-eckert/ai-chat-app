@@ -28,26 +28,38 @@ export async function POST(
   const conversationId = Number(id);
   const body = await req.json();
 
-  if (!messagesDB[conversationId]) messagesDB[conversationId] = [];
-
-  const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
   const KEY = process.env.OPENROUTER_KEY;
+  if (!KEY) {
+    return new Response('OPENROUTER_KEY is not configured', { status: 500 });
+  }
+
+  if (!messagesDB[conversationId]) messagesDB[conversationId] = [];
 
   const userMsg = { id: Date.now(), role: 'user', content: body.content };
   messagesDB[conversationId].push(userMsg);
 
-  const aiRes = await fetch(OPENROUTER_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${KEY}`,
-    },
-    body: JSON.stringify({
-      model: 'openai/gpt-4o-mini',
-      messages: body.history,
-      stream: true,
-    }),
-  });
+  let aiRes: Response;
+  try {
+    aiRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'openai/gpt-4o-mini',
+        messages: body.history,
+        stream: true,
+      }),
+    });
+  } catch {
+    return new Response('Failed to contact AI service', { status: 500 });
+  }
+
+  if (!aiRes.ok) {
+    const errText = await aiRes.text();
+    return new Response(`OpenRouter error: ${errText}`, { status: 502 });
+  }
 
   const stream = new ReadableStream({
     async start(controller) {
@@ -56,37 +68,42 @@ export async function POST(
       let aiContent = '';
       let buffer = '';
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const parts = buffer.split('\n');
-        buffer = parts.pop()!;
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const parts = buffer.split('\n');
+          buffer = parts.pop()!;
 
-        for (let part of parts) {
-          part = part.trim();
-          if (!part.startsWith('data:')) continue;
-          const payload = part.slice(5).trim();
-          if (payload === '[DONE]') {
-            messagesDB[conversationId].push({
-              id: Date.now(),
-              role: 'assistant',
-              content: aiContent,
-            });
-            controller.close();
-            return;
-          }
-          try {
-            const json = JSON.parse(payload);
-            const token = json?.choices?.[0]?.delta?.content;
-            if (token) {
-              aiContent += token;
-              controller.enqueue(new TextEncoder().encode(token));
+          for (let part of parts) {
+            part = part.trim();
+            if (!part.startsWith('data:')) continue;
+            const payload = part.slice(5).trim();
+            if (payload === '[DONE]') {
+              messagesDB[conversationId].push({
+                id: Date.now(),
+                role: 'assistant',
+                content: aiContent,
+              });
+              controller.close();
+              return;
             }
-          } catch {
-            /* skip */
+            try {
+              const json = JSON.parse(payload);
+              const token = json?.choices?.[0]?.delta?.content;
+              if (token) {
+                aiContent += token;
+                controller.enqueue(new TextEncoder().encode(token));
+              }
+            } catch {
+              /* skip malformed chunk */
+            }
           }
         }
+      } catch {
+        controller.error(new Error('Stream read failed'));
+        return;
       }
       controller.close();
     },

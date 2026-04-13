@@ -1,6 +1,8 @@
 'use client';
 import { useRouter } from 'next/navigation';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import ConversationItem from './ConversationItem';
+import { createConversation, deleteConversation } from '@/api/conversations';
 
 type Conversation = {
   id: number;
@@ -17,18 +19,35 @@ export default function Sidebar({
   onSelect: (id: number) => void;
 }) {
   const router = useRouter();
+  const queryClient = useQueryClient();
 
-  async function handleNewChat() {
-    const res = await fetch('/api/conversations', { method: 'POST' });
-    const newConvo = await res.json();
-    router.push(`/conversation/${newConvo.id}`);
-  }
+  const createMutation = useMutation({
+    mutationFn: createConversation,
+    onSuccess: (newConvo) => {
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      router.push(`/conversation/${newConvo.id}`);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteConversation,
+    onSuccess: (_data, deletedId) => {
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      if (deletedId === activeId) {
+        const remaining = conversations.filter((c) => c.id !== deletedId);
+        if (remaining.length > 0) {
+          router.push(`/conversation/${remaining[0].id}`);
+        }
+      }
+    },
+  });
 
   return (
     <aside className="w-64 bg-gray-900 text-white p-4 flex flex-col gap-4">
       <button
-        onClick={handleNewChat}
-        className="bg-indigo-600 p-2 rounded hover:bg-indigo-700"
+        onClick={() => createMutation.mutate(undefined)}
+        disabled={createMutation.isPending}
+        className="bg-indigo-600 p-2 rounded hover:bg-indigo-700 disabled:opacity-50"
       >
         + New Chat
       </button>
@@ -40,6 +59,7 @@ export default function Sidebar({
             convo={c}
             active={c.id === activeId}
             onClick={() => onSelect(c.id)}
+            onDelete={() => deleteMutation.mutate(c.id)}
           />
         ))}
       </nav>
