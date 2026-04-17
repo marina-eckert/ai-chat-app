@@ -3,14 +3,16 @@ import { useState } from 'react';
 
 export default function InputForm({
   onSend,
+  disabled = false,
 }: {
   onSend: (text: string) => void;
+  disabled?: boolean;
 }) {
   const [text, setText] = useState('');
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!text.trim()) return;
+    if (!text.trim() || disabled) return;
     onSend(text);
     setText('');
   }
@@ -38,7 +40,8 @@ export default function InputForm({
 
       <button
         type="submit"
-        className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-medium"
+        disabled={disabled}
+        className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-medium disabled:opacity-50"
       >
         Send
       </button>
