@@ -1,90 +1,99 @@
 'use client';
-import { useOptimistic, useTransition } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import ConversationItem from './ConversationItem';
 import {
-  createConversationAction,
-  deleteConversationAction,
-} from '@/app/actions/conversations';
+  createConversation,
+  deleteConversation,
+  getConversations,
+} from '@/lib/api/conversations';
 import type { ConversationDTO } from '@/lib/db/types';
+import ConversationItem from './ConversationItem';
 
-type Action =
-  | { type: 'add'; conversation: ConversationDTO }
-  | { type: 'delete'; id: number };
-
-function reducer(
-  state: ConversationDTO[],
-  action: Action,
-): ConversationDTO[] {
-  switch (action.type) {
-    case 'add':
-      return [action.conversation, ...state];
-    case 'delete':
-      return state.filter((c) => c.id !== action.id);
-  }
-}
+const KEY = ['conversations'] as const;
 
 export default function SidebarClient({
-  initialConversations,
   activeId,
+  initialData,
 }: {
-  initialConversations: ConversationDTO[];
   activeId: number;
+  initialData: ConversationDTO[];
 }) {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
-  const [optimisticConversations, applyOptimistic] = useOptimistic(
-    initialConversations,
-    reducer,
-  );
+  const qc = useQueryClient();
 
-  function handleCreate() {
-    startTransition(async () => {
-      const tempId = -Date.now();
-      applyOptimistic({
-        type: 'add',
-        conversation: {
-          id: tempId,
-          title: 'New Chat',
-          createdAt: new Date().toISOString(),
-        },
-      });
-      const created = await createConversationAction();
+  const { data: conversations = [] } = useQuery({
+    queryKey: KEY,
+    queryFn: getConversations,
+    initialData,
+  });
+
+  const createMutation = useMutation({
+    mutationFn: createConversation,
+    onMutate: async () => {
+      await qc.cancelQueries({ queryKey: KEY });
+      const previous = qc.getQueryData<ConversationDTO[]>(KEY) ?? [];
+      const optimistic: ConversationDTO = {
+        id: -Date.now(),
+        title: 'New Chat',
+        createdAt: new Date().toISOString(),
+      };
+      qc.setQueryData<ConversationDTO[]>(KEY, [optimistic, ...previous]);
+      return { previous };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx) qc.setQueryData(KEY, ctx.previous);
+    },
+    onSuccess: (created) => {
       router.push(`/conversation/${created.id}`);
-    });
-  }
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: KEY }),
+  });
 
-  function handleDelete(id: number) {
-    startTransition(async () => {
-      applyOptimistic({ type: 'delete', id });
-      await deleteConversationAction(id);
-      if (id === activeId) {
-        const remaining = optimisticConversations.filter((c) => c.id !== id);
+  const deleteMutation = useMutation({
+    mutationFn: deleteConversation,
+    onMutate: async (id: number) => {
+      await qc.cancelQueries({ queryKey: KEY });
+      const previous = qc.getQueryData<ConversationDTO[]>(KEY) ?? [];
+      qc.setQueryData<ConversationDTO[]>(
+        KEY,
+        previous.filter((c) => c.id !== id),
+      );
+      return { previous };
+    },
+    onError: (_err, _id, ctx) => {
+      if (ctx) qc.setQueryData(KEY, ctx.previous);
+    },
+    onSuccess: (_data, deletedId) => {
+      if (deletedId === activeId) {
+        const remaining = (
+          qc.getQueryData<ConversationDTO[]>(KEY) ?? []
+        ).filter((c) => c.id !== deletedId);
         if (remaining.length > 0) {
           router.push(`/conversation/${remaining[0].id}`);
         }
       }
-    });
-  }
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: KEY }),
+  });
 
   return (
     <aside className="w-64 bg-gray-900 text-white p-4 flex flex-col gap-4">
       <button
-        onClick={handleCreate}
-        disabled={isPending}
+        onClick={() => createMutation.mutate()}
+        disabled={createMutation.isPending}
         className="bg-indigo-600 p-2 rounded hover:bg-indigo-700 disabled:opacity-50"
       >
         + New Chat
       </button>
 
       <nav className="flex flex-col gap-1">
-        {optimisticConversations.map((c) => (
+        {conversations.map((c) => (
           <ConversationItem
             key={c.id}
             convo={c}
             active={c.id === activeId}
             onClick={() => router.push(`/conversation/${c.id}`)}
-            onDelete={() => handleDelete(c.id)}
+            onDelete={() => deleteMutation.mutate(c.id)}
           />
         ))}
       </nav>

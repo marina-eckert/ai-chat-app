@@ -1,4 +1,9 @@
-import { createConversation } from '@/lib/db/conversations';
+import { createConversation, listConversations } from '@/lib/db/conversations';
+
+export async function GET() {
+  const conversations = await listConversations();
+  return Response.json(conversations);
+}
 
 export async function POST() {
   const conversation = await createConversation();
