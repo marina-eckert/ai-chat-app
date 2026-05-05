@@ -3,13 +3,13 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model Conversation {
   id        Int       @id @default(autoincrement())
-  title     String
+  title     String    @default("New Chat")
   messages  Message[]
   createdAt DateTime  @default(now())
 }
