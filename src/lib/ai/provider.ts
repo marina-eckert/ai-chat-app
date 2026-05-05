@@ -5,4 +5,4 @@ const openrouter = createOpenRouter({
   apiKey: process.env.OPENROUTER_KEY ?? '',
 });
 
-export const chatModel = openrouter('openai/gpt-4o-mini');
+export const chatModel = openrouter('openai/gpt-oss-20b:free');
